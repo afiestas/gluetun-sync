@@ -1,0 +1,7 @@
+{
+    "mattermost": {
+      "webhook_url": "ttps://your-mattermost-server.com/hooks/xxx-generatedkey-xxx",
+      "payload": "{\"text\": \"Port has been updated to: {{.Port}}\"}",
+      "content_type": "application/json"
+    }
+}

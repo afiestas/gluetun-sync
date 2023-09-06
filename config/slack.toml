@@ -1,0 +1,7 @@
+[[requests]]
+  [requests.slack]
+    [[requests.slack.requests]]
+      method = "POST"
+      url = "https://hooks.slack.com/services/your/webhook/url"
+      payload = "{\"text\":\"New Port: {{.Port}}\"}"
+      content-type = "application/json"
