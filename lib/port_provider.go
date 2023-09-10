@@ -39,10 +39,9 @@ func PortChangeNotifier(portFile string, throttleTimeMs uint) (chan uint16, chan
 	go func() {
 		defer watcher.Close()
 		port, err := GetPortFromFile(portFile)
-		if err != nil {
-			return
+		if err == nil {
+			portCh <- port
 		}
-		portCh <- port
 
 		var timer *time.Timer
 		for {
