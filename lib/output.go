@@ -13,7 +13,7 @@ var (
 )
 
 func Info(info string) {
-	bold.Println(info)
+	bold.Print(info)
 }
 
 func printRequesterError(err error) {
@@ -61,5 +61,5 @@ func PrintRequester() (chan StatusUpdate, chan struct{}) {
 }
 
 func PrintError(err error) {
-	color.Red("%s", err)
+	color.Red("%s\n", err)
 }

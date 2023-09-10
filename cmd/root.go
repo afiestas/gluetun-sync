@@ -4,9 +4,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/afiestas/gluetun-sync/lib"
 	"github.com/fatih/color"
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,28 +39,50 @@ any self-hosted software such as video game servers, nextcloud, etc.`,
 	},
 }
 
-func updatePort(port uint16) {
-	fmt.Printf("\n[INFO] Detected port %d\n", port)
+func updatePort(port uint16) error {
 	updateCh, quitCh := lib.PrintRequester()
-	requester.SendRequests(port, config.Requests, updateCh)
+	err := requester.SendRequests(port, config.Requests, updateCh)
 	<-quitCh
+
+	return err
 }
 
 func watchAndSync() {
-	lib.Info(fmt.Sprintf("Monitoring: %s", config.PortFile))
+	lib.Info(fmt.Sprintf("Monitoring: %s ", config.PortFile))
 	portCh, quit, err := lib.PortChangeNotifier(config.PortFile, 1000)
 	if err != nil {
+		fmt.Println("❌")
 		lib.PrintError(fmt.Errorf("watchg file err %w", err))
 		return
 	}
 
+	fmt.Println("✅")
+	var timer *time.Timer
 	for {
 		select {
 		case port, ok := <-portCh:
 			if !ok {
 				continue
 			}
-			updatePort(port)
+			if timer != nil {
+				timer.Stop()
+				timer = nil
+			}
+			fmt.Printf("Detected port %d\n", port)
+			err := updatePort(port)
+			if err != nil {
+				lib.Info("Retrying every 10 seconds\n")
+				timer = time.AfterFunc(time.Second*2, func() {
+					err := updatePort(port)
+					if err != nil {
+						fmt.Println("Error happened, reseting timer")
+						timer.Reset(time.Second * 2)
+						return
+					}
+					timer.Stop()
+					timer = nil
+				})
+			}
 		case <-quit:
 			return
 		}
@@ -67,8 +91,8 @@ func watchAndSync() {
 
 func once() {
 	lib.Info("Synchronizing port once")
-
 	port, err := lib.GetPortFromFile(config.PortFile)
+	fmt.Printf("Detected port %d\n", port)
 	if err != nil {
 		lib.PrintError(fmt.Errorf("error while reading port from file %w", err))
 		return
@@ -95,7 +119,7 @@ func init() {
 	viper.BindPFlags(pFlags)
 }
 
-func initConfig() {
+func setupViper() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -110,34 +134,81 @@ func initConfig() {
 		lib.PrintStepError(fmt.Errorf("couldn't parse config file %w", err))
 		os.Exit(1)
 	}
+}
 
-	fmt.Println("⚙️ Using configuration")
-	fmt.Printf("  └─ %s: ", viper.ConfigFileUsed())
-	err := viper.UnmarshalExact(&config)
+func unmarshalAndValidate() (lib.Configuration, error) {
+	c := lib.Configuration{}
+	err := viper.UnmarshalExact(&c)
 	if err != nil {
-		lib.PrintError(fmt.Errorf("error marshaling config %w", err))
-		os.Exit(1)
-	}
-
-	if config.ForceColor {
-		color.NoColor = !config.ForceColor
+		return c, err
 	}
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
-	err = validate.Struct(config)
+	err = validate.Struct(c)
+	if err != nil {
+		return c, err
+	}
+
+	return c, nil
+}
+
+func printConfigError(err error) {
+	if err == nil {
+		return
+	}
 
 	if err != nil {
-		fmt.Println("❌")
 		if _, ok := err.(*validator.InvalidValidationError); ok {
 			lib.PrintStepError(err)
-			os.Exit(1)
 		}
 
 		errs := err.(validator.ValidationErrors)
 		for _, e := range errs {
 			lib.PrintStepError(e)
 		}
+	}
+}
+
+func initConfig() {
+	setupViper()
+	lib.Info(fmt.Sprintf("Configuration: %s ", viper.ConfigFileUsed()))
+
+	var err error
+	config, err = unmarshalAndValidate()
+	if err != nil {
+		fmt.Println("❌")
+		printConfigError(err)
 		os.Exit(1)
 	}
 	fmt.Println("✅")
+
+	var timer *time.Timer
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		if timer != nil {
+			timer.Reset(time.Second * 1)
+			return
+		}
+
+		timer = time.AfterFunc(time.Second*1, func() {
+			timer.Stop()
+			timer = nil
+
+			lib.Info(fmt.Sprintf("Config file changed: %s ", e.Name))
+			newConfig, err := unmarshalAndValidate()
+			if err != nil {
+				fmt.Println("❌")
+				fmt.Println("can't parse new configuration")
+				printConfigError(err)
+				return
+			}
+			fmt.Println("✅")
+			lib.Info("Updating configuration\n")
+			config = newConfig
+		})
+	})
+	viper.WatchConfig()
+
+	if config.ForceColor {
+		color.NoColor = !config.ForceColor
+	}
 }
