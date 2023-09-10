@@ -1,7 +1,4 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
-*/
+/* SPDX-License-Identifier: MIT */
 package main
 
 import "github.com/afiestas/gluetun-sync/cmd"
