@@ -168,6 +168,10 @@ func (r *Requester) SendRequests(port uint16, requests map[string]RequestGroup, 
 				addErr(err, update)
 				break
 			}
+			if r.StatusCode != http.StatusOK {
+				addErr(fmt.Errorf("http request response code is nto 200 but %d instead", r.StatusCode), update)
+				break
+			}
 
 			update.Status = Success
 			reportUpdate(updateChan, update)
