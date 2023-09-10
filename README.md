@@ -1,6 +1,6 @@
 # Gluetun-Sync
 
-![Build](https://github.com/afiestas/gluetun-sync/actions/workflows/go.yml/badge.svg)
+![Build](https://github.com/afiestas/gluetun-sync/actions/workflows/main.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Version](https://img.shields.io/badge/version-1.0.0-orange)
 [![Go Report Card](https://goreportcard.com/badge/github.com/afiestas/gluetun-sync)](https://goreportcard.com/report/github.com/afiestas/gluetun-sync)
