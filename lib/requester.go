@@ -60,7 +60,7 @@ type templateData struct {
 func executeTemplate(templateStr string, templateData templateData) (*bytes.Buffer, error) {
 	templ, err := template.New("template").Parse(templateStr)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't parse tempalte in url %w", err)
+		return nil, fmt.Errorf("couldn't parse template in url %w", err)
 	}
 
 	var result bytes.Buffer
@@ -140,7 +140,7 @@ func (r *Requester) SendRequests(port uint16, requests map[string]RequestGroup, 
 			update := StatusUpdate{Service: service, Method: request.Method, Path: request.Url, Step: k + 1, Status: UnInitialized}
 			url, err := withUrl(request.Url, templateData)
 			if err != nil {
-				err = fmt.Errorf("cound't build url with tempalte %w", err)
+				err = fmt.Errorf("cound't build url with template %w", err)
 				addErr(err, update)
 				break
 			}
@@ -169,7 +169,7 @@ func (r *Requester) SendRequests(port uint16, requests map[string]RequestGroup, 
 				break
 			}
 			if r.StatusCode != http.StatusOK {
-				addErr(fmt.Errorf("http request response code is nto 200 but %d instead", r.StatusCode), update)
+				addErr(fmt.Errorf("http request response code is not 200 but %d instead", r.StatusCode), update)
 				break
 			}
 
