@@ -53,22 +53,22 @@ func PortChangeNotifier(portFile string, throttleTimeMs uint) (chan uint16, chan
 				if event.Name != portFile {
 					continue
 				}
-				if timer == nil {
-					timer = time.AfterFunc(throttleDuration, func() {
-						newPort, err := GetPortFromFile(portFile)
-						if err != nil {
-							fmt.Println("error loading new port file", err)
-							return
-						}
-						if newPort != port {
-							port = newPort
-							portCh <- port
-						}
-						timer = nil
-					})
-				} else {
+				if timer != nil {
 					timer.Reset(time.Second)
+					continue
 				}
+				timer = time.AfterFunc(throttleDuration, func() {
+					newPort, err := GetPortFromFile(portFile)
+					if err != nil {
+						fmt.Println("error loading new port file", err)
+						return
+					}
+					if newPort != port {
+						port = newPort
+						portCh <- port
+					}
+					timer = nil
+				})
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
