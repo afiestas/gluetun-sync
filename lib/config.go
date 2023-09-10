@@ -21,6 +21,6 @@ type Configuration struct {
 	Once       bool
 	ForceColor bool                    `mapstructure:"force-color"`
 	Config     string                  `mapstructure:"config"`
-	PortFile   string                  `mapstructure:"port-file" validate:"required,file"`
-	Requests   map[string]RequestGroup `mapstructure:"requests" validate:"dive,required"`
+	PortFile   string                  `mapstructure:"port-file" validate:"required,filepath"`
+	Requests   map[string]RequestGroup `mapstructure:"requests" validate:"gt=0,dive,required"`
 }
