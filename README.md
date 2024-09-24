@@ -12,7 +12,7 @@ Built to run seamlessly alongside Gluetun, this tool monitors port changes and t
 
 - **Auto Monitoring**: Continuously watches Gluetun for port changes.
 - **Configurable Actions**: HTTP requests to update services or send notifications.
-- **Authenticated actions**: HTTP requests are executed in serie and cookies/authorization headers are carried on
+- **Authenticated actions**: HTTP requests are executed in series and cookies/authorization headers are carried on
 - **Flexible Configuration**: Support for JSON, TOML, and YAML configuration files.
 - **Docker Friendly**: Designed to run in a Docker container.
 
@@ -31,7 +31,7 @@ docker run ...
 ## Configuration
 
 The service can be configured using JSON, TOML, or YAML configuration files.
-The url and payload fields can be configured using Go template to include either
+The URL and payload fields can be configured using a Go template to include either
 the provided credentials or the port.
 
 - Username
